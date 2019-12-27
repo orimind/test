@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Firebase Authentication via Goolge</title>
+    <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/5.7.1/firebase.js"></script>
+	<script>
+	  // Initialize Firebase
+	  var config = {
+	    apiKey: "AIzaSyBbLthH0BlM8P2mu9ksADrae4g-P-d4U7A",
+	    authDomain: "ajax-84640.firebaseapp.com",
+	    databaseURL: "https://ajax-84640.firebaseio.com",
+	    projectId: "ajax-84640",
+	    storageBucket: "ajax-84640.appspot.com",
+	    messagingSenderId: "70128188501",
+	  };
+	  firebase.initializeApp(config);
+	</script>
+
+    <script>
+        $(document).ready(function(){  
+        	var provider = new firebase.auth.GoogleAuthProvider();
+		    //所需授權的Scope 
+		    provider.addScope('https://www.googleapis.com/auth/contacts.readonly');
+		    provider.setCustomParameters({'login_hint': 'user@example.com'});
+		    var userLogin;
+			firebase.auth().onAuthStateChanged(function(user) {
+			  if (user) {
+			    userLogin = user;
+			    alert("User is logined")
+			  } else {
+			    userLogin = null;
+			    alert("User is not logined yet.");
+			  }
+			});
+            $("#SignIn").click(function(){
+            	
+            	firebase.auth().signInWithPopup(provider).then(function(result) {
+	               // 取得FB Token，可以使用於FB API中
+	               var token = result.credential.accessToken;
+	               // 使用者資料
+	               userLogin = result.user;
+	               alert("成功使用 Google 帳號登入！");
+	            }).catch(function(error) {
+	            	// Handle Errors here.
+	                var errorCode = error.code;
+	                var errorMessage = error.message;
+	                // The email of the user's account used.
+	                var email = error.email;
+	                // The firebase.auth.AuthCredential type that was used.
+	                var credential = error.credential;
+	                alert(errorMessage)
+	            });
+            });
+            
+			$("#SignOut").click(function(){
+				firebase.auth().signOut().then(function() {
+			        console.log("User sign out!");
+			    }, function(error) {
+			    console.log("User sign out error!");
+			    })
+			 });
+            $("#getUID").click(function(){
+            	if (userLogin)
+            		alert(userLogin['uid']);
+            });                         
+        });         
+    </script>
+    <!-- chatcox-->
+	<script >
+	  	var user = firebase.auth().currentUser;
+		if (user != null) {
+			$(document).ready(function(){ 
+	            $("#push_test").click(function(){
+	                var name         = user.displayName.val();
+	                var msg          = $('#push_msg').val();
+	                push(name, msg);
+	            });  
+	            function display_msgs(data_val){
+	              keys = Object.keys(data_val);
+	              msgs = '';
+	              
+	              for (var i = keys.length - 1; i >= 0; i--) {
+	                msgs += data_val[keys[i]]['username'] +': '+ data_val[keys[i]]['message']+'<br>';
+	              }
+	              $('#data').html(msgs); 
+	            }
+	            db.ref('message/').on('value', function(snapshot) {
+	              display_msgs(snapshot.val());
+	            });  
+	        });         
+		}
+		else {
+	  		alert("User is not logined yet.");
+	  	}
+
+	</script>
+  </head>
+  <body>
+    <h1>Firebase Authentication Sign In via Google</h1>
+ 
+    <button id="SignIn">登入</button><br><br>  
+    <button id="SignOut">登出</button><br><br>  
+    <button id="getUID">取得UID</button><br><br>
+
+    <div class="r-ent" style="float: right; width: 25%;height: 25%">
+      	<div class="as-mes-title">廣場聊天室
+      	</div>
+      	<div id="chatRoom">
+      		<input type="text" id="push_msg" placeholder="訊息"/>
+    		<button id="push_test">Push</button><br><br>  
+    		<label>大家都在說</label><br>
+    		<label  id="data"></label><br>
+      	</div>
+      </div> 
+
+  </body>
+</html>
